@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Analytics {
+  analytics_id        BigInt    @id @default(autoincrement())
+  child_id            BigInt
+  conversation_id     BigInt
+  extracted_keywords   Json
+  created_at          DateTime  @default(now())
+
+  @@index([child_id])
+  @@index([conversation_id])
+  @@index([created_at])
+  @@map("analytics")
+}
+
+model ChildInterest {
+  interest_id   BigInt    @id @default(autoincrement())
+  child_id      BigInt
+  keyword       String    @db.VarChar(100)
+  raw_score     Float     @db.DoublePrecision
+  last_updated  DateTime
+  created_at    DateTime  @default(now())
+
+  @@unique([child_id, keyword])
+  @@index([child_id])
+  @@index([last_updated])
+  @@map("child_interests")
+}
