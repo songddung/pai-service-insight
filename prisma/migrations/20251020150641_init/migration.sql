@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "analytics" (
     "analytics_id" BIGSERIAL NOT NULL,
-    "child_id" BIGINT NOT NULL,
+    "child_id" INT NOT NULL,
     "conversation_id" BIGINT NOT NULL,
     "extracted_keywords" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -12,7 +12,7 @@ CREATE TABLE "analytics" (
 -- CreateTable
 CREATE TABLE "child_interests" (
     "interest_id" BIGSERIAL NOT NULL,
-    "child_id" BIGINT NOT NULL,
+    "child_id" INT NOT NULL,
     "keyword" VARCHAR(100) NOT NULL,
     "raw_score" DOUBLE PRECISION NOT NULL,
     "last_updated" TIMESTAMP(3) NOT NULL,

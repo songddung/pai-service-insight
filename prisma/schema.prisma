@@ -16,9 +16,9 @@ datasource db {
 
 model Analytics {
   analytics_id        BigInt    @id @default(autoincrement())
-  child_id            BigInt
+  child_id            Int
   conversation_id     BigInt
-  extracted_keywords   Json
+  extracted_keywords  Json
   created_at          DateTime  @default(now())
 
   @@index([child_id])
@@ -29,7 +29,7 @@ model Analytics {
 
 model ChildInterest {
   interest_id   BigInt    @id @default(autoincrement())
-  child_id      BigInt
+  child_id      Int
   keyword       String    @db.VarChar(100)
   raw_score     Float     @db.DoublePrecision
   last_updated  DateTime
