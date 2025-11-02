@@ -1,6 +1,7 @@
 export const INSIGHT_TOKENS = {
   // UseCase (Input Ports)
   CreateAnalyticsUseCase: Symbol('CreateAnalyticsUseCase'),
+  GetTopInterestsUseCase: Symbol('GetTopInterestsUseCase'),
 
   // Repository (Output Ports - Write)
   AnalyticsRepositoryPort: Symbol('AnalyticsRepositoryPort'),
@@ -8,6 +9,7 @@ export const INSIGHT_TOKENS = {
 
   // Query (Output Ports - Read)
   TokenVersionQueryPort: Symbol('TokenVersionQueryPort'),
+  ChildInterestQueryPort: Symbol('ChildInterestQueryPort'),
 
   // External Services (Output Ports)
   // Security (Output Ports)
