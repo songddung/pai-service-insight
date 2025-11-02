@@ -76,4 +76,37 @@ export class ChildInterestRepositoryAdapter
 
     return results;
   }
+
+  async deleteOldInterests(
+    minDaysSinceUpdate: number,
+    maxScore: number,
+  ): Promise<{ deletedCount: number; deletedKeywords: string[] }> {
+    // 삭제 기준 날짜 계산
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - minDaysSinceUpdate);
+
+    // 삭제 대상 조회 (키워드 수집용)
+    const toDelete = await this.prisma.childInterest.findMany({
+      where: {
+        last_updated: { lt: cutoffDate },
+        raw_score: { lt: maxScore },
+      },
+      select: { keyword: true },
+    });
+
+    const deletedKeywords = toDelete.map((item) => item.keyword);
+
+    // 삭제 실행
+    const result = await this.prisma.childInterest.deleteMany({
+      where: {
+        last_updated: { lt: cutoffDate },
+        raw_score: { lt: maxScore },
+      },
+    });
+
+    return {
+      deletedCount: result.count,
+      deletedKeywords,
+    };
+  }
 }

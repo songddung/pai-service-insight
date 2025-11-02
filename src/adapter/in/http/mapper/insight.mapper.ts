@@ -4,9 +4,13 @@ import { CreateAnalyticsCommand } from 'src/application/command/create-analytics
 import {
   CreateAnalyticsResponseData,
   GetTopInterestsResponseData,
+  PruneOldInterestsResponseData,
+  GetRecommendationsResponseData,
 } from 'pai-shared-types';
 import { CreateAnalyticsResult } from 'src/application/port/in/result/create-analytics.result.dto';
 import { GetTopInterestsResult } from 'src/application/port/in/result/get-top-interests.result.dto';
+import { PruneOldInterestsResult } from 'src/application/port/in/result/prune-old-interests.result.dto';
+import { GetRecommendationsResult } from 'src/application/port/in/result/get-recommendations.result.dto';
 
 @Injectable()
 export class InsightMapper {
@@ -38,6 +42,38 @@ export class InsightMapper {
         rawScore: interest.rawScore,
         lastUpdated: interest.lastUpdated.toISOString(),
       })),
+    };
+  }
+
+  toPruneResponse(
+    result: PruneOldInterestsResult,
+  ): PruneOldInterestsResponseData {
+    return {
+      deletedCount: result.deletedCount,
+      deletedKeywords: result.deletedKeywords,
+    };
+  }
+
+  toRecommendationsResponse(
+    result: GetRecommendationsResult,
+  ): GetRecommendationsResponseData {
+    return {
+      recommendations: result.recommendations.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        category: item.category,
+        location: item.location,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        imageUrl: item.imageUrl,
+        link: item.link,
+        relevantKeywords: item.relevantKeywords,
+      })),
+      totalCount: result.totalCount,
+      page: result.page,
+      pageSize: result.pageSize,
+      hasMore: result.hasMore,
     };
   }
 }

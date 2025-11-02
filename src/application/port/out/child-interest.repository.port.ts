@@ -8,4 +8,8 @@ export interface ChildInterestRepositoryPort {
   ): Promise<ChildInterest | null>;
   findByChildId(childId: number): Promise<ChildInterest[]>;
   bulkSave(interests: ChildInterest[]): Promise<ChildInterest[]>;
+  deleteOldInterests(
+    minDaysSinceUpdate: number,
+    maxScore: number,
+  ): Promise<{ deletedCount: number; deletedKeywords: string[] }>;
 }
