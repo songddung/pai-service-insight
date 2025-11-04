@@ -39,6 +39,10 @@ import { PruneInterestsScheduler } from './adapter/in/scheduler/prune-interests.
 // External Adapter 구현체
 import { MockRecommendationProviderAdapter } from './adapter/out/external/mock-recommendation-provider.adapter';
 
+// Domain Services
+import { InterestScoringService } from './domain/service/interest-scoring.service';
+import { KeywordMatchingService } from './domain/service/keyword-matching.service';
+
 @Module({
   imports: [ScheduleModule.forRoot(), RedisModule, PrismaModule],
   controllers: [InsightController],
@@ -51,6 +55,10 @@ import { MockRecommendationProviderAdapter } from './adapter/out/external/mock-r
 
     // Scheduler
     PruneInterestsScheduler,
+
+    // Domain Services
+    InterestScoringService,
+    KeywordMatchingService,
 
     // UseCase 바인딩
     {

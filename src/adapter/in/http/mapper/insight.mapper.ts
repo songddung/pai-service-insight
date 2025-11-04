@@ -11,6 +11,8 @@ import { CreateAnalyticsResult } from 'src/application/port/in/result/create-ana
 import { GetTopInterestsResult } from 'src/application/port/in/result/get-top-interests.result.dto';
 import { PruneOldInterestsResult } from 'src/application/port/in/result/prune-old-interests.result.dto';
 import { GetRecommendationsResult } from 'src/application/port/in/result/get-recommendations.result.dto';
+import { GetRecommendationsQuery } from 'src/application/command/get-recommendations.command';
+import { GetTopInterestsQuery } from 'src/application/command/get-top-interests.command';
 
 @Injectable()
 export class InsightMapper {
@@ -33,6 +35,13 @@ export class InsightMapper {
     };
   }
 
+  toGetTopInterestsCommand(
+    childId: number,
+    limit: number,
+  ): GetTopInterestsQuery {
+    return new GetTopInterestsQuery(childId, limit);
+  }
+
   toGetTopInterestsResponse(
     result: GetTopInterestsResult,
   ): GetTopInterestsResponseData {
@@ -52,6 +61,15 @@ export class InsightMapper {
       deletedCount: result.deletedCount,
       deletedKeywords: result.deletedKeywords,
     };
+  }
+
+  toRecommandationCommand(
+    childId: number,
+    page: number,
+    pageSize: number,
+    category?: string,
+  ): GetRecommendationsQuery {
+    return new GetRecommendationsQuery(childId, page, pageSize, category);
   }
 
   toRecommendationsResponse(

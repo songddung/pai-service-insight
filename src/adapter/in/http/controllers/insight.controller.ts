@@ -69,11 +69,11 @@ export class InsightController {
     @Param('childId') childId: string,
     @Query('limit') limit?: string,
   ): Promise<BaseResponse<GetTopInterestsResponseData>> {
-    const query = new GetTopInterestsQuery(
+    const command = this.insightMapper.toGetTopInterestsCommand(
       Number(childId),
       limit ? Number(limit) : 10,
     );
-    const result = await this.getTopInterestsUseCase.execute(query);
+    const result = await this.getTopInterestsUseCase.execute(command);
     const response = this.insightMapper.toGetTopInterestsResponse(result);
 
     return {
@@ -109,13 +109,13 @@ export class InsightController {
     @Query('pageSize') pageSize?: string,
     @Query('category') category?: string,
   ): Promise<BaseResponse<GetRecommendationsResponseData>> {
-    const query = new GetRecommendationsQuery(
+    const command = this.insightMapper.toRecommandationCommand(
       Number(childId),
       page ? Number(page) : 1,
       pageSize ? Number(pageSize) : 10,
       category,
     );
-    const result = await this.getRecommendationsUseCase.execute(query);
+    const result = await this.getRecommendationsUseCase.execute(command);
     const response = this.insightMapper.toRecommendationsResponse(result);
 
     return {

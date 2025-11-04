@@ -52,25 +52,40 @@ export class ChildInterestRepositoryAdapter
   }
 
   async bulkSave(interests: ChildInterest[]): Promise<ChildInterest[]> {
+    if (interests.length === 0) {
+      return [];
+    }
+
     const results: ChildInterest[] = [];
+
+    // 생성할 항목과 업데이트할 항목 분리
+    const toCreate = interests.filter((interest) => !interest.getId());
+    const toUpdate = interests.filter((interest) => interest.getId());
 
     // 트랜잭션으로 처리
     await this.prisma.$transaction(async (tx) => {
-      for (const interest of interests) {
-        const data = ChildInterestMapper.toPersistence(interest);
+      // 1. 새로운 항목 일괄 생성
+      if (toCreate.length > 0) {
+        const createData = toCreate.map((interest) =>
+          ChildInterestMapper.toPersistence(interest),
+        );
 
-        if (interest.getId()) {
-          const updated = await tx.childInterest.update({
-            where: { interest_id: interest.getId()! },
-            data,
-          });
-          results.push(ChildInterestMapper.toDomain(updated));
-        } else {
-          const created = await tx.childInterest.create({
-            data,
-          });
+        // createMany는 생성된 레코드를 반환하지 않으므로 개별 create 사용
+        for (const data of createData) {
+          const created = await tx.childInterest.create({ data });
           results.push(ChildInterestMapper.toDomain(created));
         }
+      }
+
+      // 2. 기존 항목 일괄 업데이트
+      // Prisma는 updateMany로 다른 값을 업데이트할 수 없으므로 개별 업데이트 필요
+      for (const interest of toUpdate) {
+        const data = ChildInterestMapper.toPersistence(interest);
+        const updated = await tx.childInterest.update({
+          where: { interest_id: interest.getId()! },
+          data,
+        });
+        results.push(ChildInterestMapper.toDomain(updated));
       }
     });
 

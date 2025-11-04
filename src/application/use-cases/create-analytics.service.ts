@@ -8,6 +8,7 @@ import type { ChildInterestRepositoryPort } from '../port/out/child-interest.rep
 import { Analytics } from 'src/domain/model/analytics/entity/analytics.entity';
 import { ChildInterest } from 'src/domain/model/child-interest/entity/child-interest.entity';
 import { ExtractedKeywords } from 'src/domain/model/analytics/vo/extracted-keywords.vo';
+import { InterestScoringService } from 'src/domain/service/interest-scoring.service';
 
 @Injectable()
 export class CreateAnalyticsService implements CreateAnalyticsUseCase {
@@ -17,6 +18,8 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
 
     @Inject(INSIGHT_TOKENS.ChildInterestRepositoryPort)
     private readonly childInterestRepository: ChildInterestRepositoryPort,
+
+    private readonly scoringService: InterestScoringService,
   ) {}
 
   async execute(
@@ -62,7 +65,6 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
 
     for (const keyword of uniqueKeywords) {
       const mentionCount = keywordFrequency.get(keyword)!;
-      const calculatedScore = this.calculateScore(mentionCount);
 
       // 기존 관심사 찾기
       const existing =
@@ -72,18 +74,19 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
         );
 
       if (existing) {
-        // 기존 키워드: 감쇠 적용 후 새 점수 추가
-        const decayedScore = this.applyDecay(
+        // 기존 키워드: 도메인 서비스를 통한 점수 업데이트
+        const newTotalScore = this.scoringService.updateExistingScore(
           existing.getRawScore(),
           existing.getLastUpdated() || existing.getCreatedAt()!,
+          mentionCount,
         );
-        const newTotalScore = decayedScore + calculatedScore;
 
         existing.updateScore(newTotalScore);
         await this.childInterestRepository.save(existing);
         updatedKeywords.push(keyword);
       } else {
-        // 새 키워드: 계산된 점수로 생성
+        // 새 키워드: 도메인 서비스를 통한 점수 계산
+        const calculatedScore = this.scoringService.calculateScore(mentionCount);
         const newInterest = ChildInterest.create({
           childId: command.childId,
           keyword: keyword,
@@ -99,31 +102,5 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
       updatedKeywords,
       createdKeywords,
     };
-  }
-
-  /**
-   * 키워드 점수 계산
-   * @param mentionCount 언급 횟수
-   * @returns 계산된 점수
-   */
-  private calculateScore(mentionCount: number): number {
-    const baseScore = 3.0;
-    const mentionBonus = Math.min(mentionCount * 0.5, 3.0); // 최대 3점
-    return baseScore + mentionBonus;
-  }
-
-  /**
-   * 시간에 따른 점수 감쇠 적용
-   * @param currentScore 현재 점수
-   * @param lastUpdated 마지막 업데이트 시간
-   * @returns 감쇠 적용된 점수
-   */
-  private applyDecay(currentScore: number, lastUpdated: Date): number {
-    const now = new Date();
-    const daysPassed =
-      (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
-    const halfLife = 7; // 7일 반감기
-    const decayFactor = Math.pow(0.5, daysPassed / halfLife);
-    return currentScore * decayFactor;
   }
 }

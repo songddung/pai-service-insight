@@ -5,6 +5,7 @@ import { GetRecommendationsResult } from '../port/in/result/get-recommendations.
 import type { ChildInterestQueryPort } from '../port/out/child-interest.query.port';
 import type { RecommendationProviderPort } from '../port/out/recommendation-provider.port';
 import { INSIGHT_TOKENS } from 'src/insight.token';
+import { KeywordMatchingService } from 'src/domain/service/keyword-matching.service';
 
 @Injectable()
 export class GetRecommendationsService implements GetRecommendationsUseCase {
@@ -16,6 +17,8 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
 
     @Inject(INSIGHT_TOKENS.RecommendationProviderPort)
     private readonly recommendationProvider: RecommendationProviderPort,
+
+    private readonly keywordMatchingService: KeywordMatchingService,
   ) {}
 
   async execute(
@@ -61,11 +64,13 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
     // 4. 결과 매핑 (각 추천 항목에 매칭된 키워드 추가)
     const recommendations = searchResult.items.map((item) => ({
       ...item,
-      relevantKeywords: this.findRelevantKeywords(item, keywords),
+      relevantKeywords: this.keywordMatchingService.findRelevantKeywords(
+        item,
+        keywords,
+      ),
     }));
 
-    const hasMore =
-      query.page * query.pageSize < searchResult.totalCount;
+    const hasMore = query.page * query.pageSize < searchResult.totalCount;
 
     this.logger.log(
       `추천 콘텐츠 조회 완료 - 결과 수: ${recommendations.length}, 전체: ${searchResult.totalCount}`,
@@ -78,24 +83,5 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
       pageSize: query.pageSize,
       hasMore,
     };
-  }
-
-  /**
-   * 추천 항목과 관련된 키워드 찾기
-   */
-  private findRelevantKeywords(
-    item: any,
-    keywords: string[],
-  ): string[] {
-    const relevantKeywords: string[] = [];
-    const searchText = `${item.title} ${item.description} ${item.category}`.toLowerCase();
-
-    for (const keyword of keywords) {
-      if (searchText.includes(keyword.toLowerCase())) {
-        relevantKeywords.push(keyword);
-      }
-    }
-
-    return relevantKeywords;
   }
 }

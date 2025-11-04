@@ -13,7 +13,7 @@ export class ChildInterestQueryAdapter implements ChildInterestQueryPort {
     limit: number,
   ): Promise<ChildInterest[]> {
     const records = await this.prisma.childInterest.findMany({
-      where: { child_id: BigInt(childId) },
+      where: { child_id: childId },
       orderBy: { raw_score: 'desc' },
       take: limit,
     });
