@@ -30,8 +30,7 @@ export class InsightMapper {
 
   toCreateResponse(result: CreateAnalyticsResult): CreateAnalyticsResponseData {
     return {
-      updatedKeywords: result.updatedKeywords,
-      createdKeywords: result.createdKeywords,
+      title: result.title,
     };
   }
 
@@ -46,11 +45,11 @@ export class InsightMapper {
     result: GetTopInterestsResult,
   ): GetTopInterestsResponseData {
     return {
-      interests: result.interests.map((interest) => ({
-        keyword: interest.keyword,
-        rawScore: interest.rawScore,
-        lastUpdated: interest.lastUpdated.toISOString(),
-      })),
+      interests: {
+        keyword: result.interests.keyword,
+        rawScore: result.interests.rawScore,
+        lastUpdated: result.interests.lastUpdated?.toISOString(),
+      },
     };
   }
 

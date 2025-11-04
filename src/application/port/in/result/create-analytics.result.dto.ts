@@ -1,4 +1,3 @@
 export interface CreateAnalyticsResult {
-  updatedKeywords: string[];
-  createdKeywords: string[];
+  title: string;
 }

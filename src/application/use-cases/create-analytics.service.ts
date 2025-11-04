@@ -57,9 +57,6 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
     await this.analyticsRepository.save(analytics);
 
     // child_interests 업데이트
-    const updatedKeywords: string[] = [];
-    const createdKeywords: string[] = [];
-
     // 중복 제거된 키워드만 처리
     const uniqueKeywords = Array.from(keywordFrequency.keys());
 
@@ -83,7 +80,6 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
 
         existing.updateScore(newTotalScore);
         await this.childInterestRepository.save(existing);
-        updatedKeywords.push(keyword);
       } else {
         // 새 키워드: 도메인 서비스를 통한 점수 계산
         const calculatedScore = this.scoringService.calculateScore(mentionCount);
@@ -93,14 +89,35 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
           rawScore: calculatedScore,
         });
         await this.childInterestRepository.save(newInterest);
-        createdKeywords.push(keyword);
       }
+    }
+
+    // 가장 많이 나온 키워드를 title로 선정
+    let title = '';
+    if (keywordFrequency.size > 0) {
+      let maxCount = 0;
+      let mostFrequentKeyword = '';
+
+      // 원본 배열 순서를 유지하며 가장 많이 나온 키워드 찾기
+      for (const keyword of rawKeywords) {
+        const trimmed = keyword?.trim();
+        if (!trimmed || trimmed.length === 0) continue;
+
+        const count = keywordFrequency.get(trimmed)!;
+
+        // 더 높은 빈도를 가진 키워드 발견 시 업데이트
+        if (count > maxCount) {
+          maxCount = count;
+          mostFrequentKeyword = trimmed;
+        }
+      }
+
+      title = mostFrequentKeyword;
     }
 
     // 결과 반환
     return {
-      updatedKeywords,
-      createdKeywords,
+      title,
     };
   }
 }

@@ -8,13 +8,14 @@ export interface RecommendationItem {
   endDate?: string;
   imageUrl?: string;
   link?: string;
+  mapX?: number; // 경도 (longitude)
+  mapY?: number; // 위도 (latitude)
+  distance?: number; // 사용자로부터의 거리 (km)
 }
 
 export interface RecommendationSearchCriteria {
-  keywords: string[]; // 검색할 키워드 목록
+  keyword: string; // 검색할 키워드
   category?: string; // 카테고리 필터
-  page: number;
-  pageSize: number;
 }
 
 export interface RecommendationSearchResult {

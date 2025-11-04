@@ -12,6 +12,8 @@ export const INSIGHT_TOKENS = {
   // Query (Output Ports - Read)
   TokenVersionQueryPort: Symbol('TokenVersionQueryPort'),
   ChildInterestQueryPort: Symbol('ChildInterestQueryPort'),
+  ProfileQueryPort: Symbol('ProfileQueryPort'),
+  UserLocationQueryPort: Symbol('UserLocationQueryPort'),
 
   // External Services (Output Ports)
   RecommendationProviderPort: Symbol('RecommendationProviderPort'),

@@ -13,26 +13,21 @@ export class KeywordMatchingService {
    * 콘텐츠에서 관련 키워드 찾기
    *
    * @param content 검색할 콘텐츠 (제목, 설명, 카테고리 등)
-   * @param keywords 매칭할 키워드 목록
+   * @param keyword 매칭할 키워드
    * @returns 매칭된 키워드 목록
    *
-   * @example
-   * const matched = service.findRelevantKeywords(
-   *   { title: '공룡 박물관', description: '티라노사우루스' },
-   *   ['공룡', '로봇', '우주']
-   * );
-   * // 결과: ['공룡']
-   */
-  findRelevantKeywords(
+   **/
+
+  findRelevantKeyword(
     content: {
       title?: string;
       description?: string;
       category?: string;
       [key: string]: any;
     },
-    keywords: string[],
+    keyword: string,
   ): string[] {
-    if (!keywords || keywords.length === 0) {
+    if (!keyword) {
       return [];
     }
 
@@ -42,10 +37,9 @@ export class KeywordMatchingService {
     const searchText = this.buildSearchText(content);
 
     // 각 키워드가 포함되어 있는지 확인
-    for (const keyword of keywords) {
-      if (this.isKeywordMatched(searchText, keyword)) {
-        relevantKeywords.push(keyword);
-      }
+
+    if (this.isKeywordMatched(searchText, keyword)) {
+      relevantKeywords.push(keyword);
     }
 
     return relevantKeywords;
@@ -60,11 +54,11 @@ export class KeywordMatchingService {
    */
   findMostRelevantContent<T extends { title?: string; description?: string }>(
     contents: T[],
-    keywords: string[],
+    keyword: string,
   ): Array<T & { matchCount: number; matchedKeywords: string[] }> {
     return contents
       .map((content) => {
-        const matchedKeywords = this.findRelevantKeywords(content, keywords);
+        const matchedKeywords = this.findRelevantKeyword(content, keyword);
         return {
           ...content,
           matchCount: matchedKeywords.length,
@@ -83,14 +77,14 @@ export class KeywordMatchingService {
    */
   calculateMatchScore(
     content: { title?: string; description?: string; category?: string },
-    keywords: string[],
+    keyword: string,
   ): number {
-    if (!keywords || keywords.length === 0) {
+    if (!keyword) {
       return 0;
     }
 
-    const matchedKeywords = this.findRelevantKeywords(content, keywords);
-    return matchedKeywords.length / keywords.length;
+    const matchedKeywords = this.findRelevantKeyword(content, keyword);
+    return matchedKeywords.length / keyword.length;
   }
 
   /**

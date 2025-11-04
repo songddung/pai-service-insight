@@ -74,13 +74,21 @@ export class InsightController {
       limit ? Number(limit) : 10,
     );
     const result = await this.getTopInterestsUseCase.execute(command);
-    const response = this.insightMapper.toGetTopInterestsResponse(result);
+    if (result) {
+      const response = this.insightMapper.toGetTopInterestsResponse(result);
 
-    return {
-      success: true,
-      message: '상위 관심사 조회 성공',
-      data: response,
-    };
+      return {
+        success: true,
+        message: '상위 관심사 조회 성공',
+        data: response,
+      };
+    } else {
+      return {
+        success: true,
+        message: '상위 관심사 조회 성공',
+        data: null,
+      };
+    }
   }
 
   @Delete('interests/prune')

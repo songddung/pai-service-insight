@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ConfigModule } from '@nestjs/config';
 
 // Controllers
 import { InsightController } from './adapter/in/http/controllers/insight.controller';
@@ -37,14 +38,23 @@ import { ChildInterestQueryAdapter } from './adapter/out/persistence/child-inter
 import { PruneInterestsScheduler } from './adapter/in/scheduler/prune-interests.scheduler';
 
 // External Adapter 구현체
-import { MockRecommendationProviderAdapter } from './adapter/out/external/mock-recommendation-provider.adapter';
+// import { MockRecommendationProviderAdapter } from './adapter/out/external/mock-recommendation-provider.adapter';
+import { KoreaTourismApiAdapter } from './adapter/out/external/korea-tourism-api.adapter';
+import { ProfileQueryAdapter } from './adapter/out/http/user-service/profile.query.adapter';
+import { UserLocationQueryAdapter } from './adapter/out/http/user-service/user-location.query.adapter';
 
 // Domain Services
 import { InterestScoringService } from './domain/service/interest-scoring.service';
 import { KeywordMatchingService } from './domain/service/keyword-matching.service';
+import { LocationDistanceService } from './domain/service/location-distance.service';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), RedisModule, PrismaModule],
+  imports: [
+    ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
+    RedisModule,
+    PrismaModule,
+  ],
   controllers: [InsightController],
   providers: [
     // Guard
@@ -59,6 +69,7 @@ import { KeywordMatchingService } from './domain/service/keyword-matching.servic
     // Domain Services
     InterestScoringService,
     KeywordMatchingService,
+    LocationDistanceService,
 
     // UseCase 바인딩
     {
@@ -87,6 +98,14 @@ import { KeywordMatchingService } from './domain/service/keyword-matching.servic
       provide: INSIGHT_TOKENS.ChildInterestQueryPort,
       useClass: ChildInterestQueryAdapter,
     },
+    {
+      provide: INSIGHT_TOKENS.ProfileQueryPort,
+      useClass: ProfileQueryAdapter,
+    },
+    {
+      provide: INSIGHT_TOKENS.UserLocationQueryPort,
+      useClass: UserLocationQueryAdapter,
+    },
 
     // Repository 바인딩 (쓰기)
     {
@@ -101,7 +120,7 @@ import { KeywordMatchingService } from './domain/service/keyword-matching.servic
     // External Services 바인딩
     {
       provide: INSIGHT_TOKENS.RecommendationProviderPort,
-      useClass: MockRecommendationProviderAdapter,
+      useClass: KoreaTourismApiAdapter,
     },
   ],
 })

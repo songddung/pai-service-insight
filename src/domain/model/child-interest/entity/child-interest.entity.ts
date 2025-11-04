@@ -1,3 +1,6 @@
+import { Keyword } from '../vo/keyword.vo';
+import { Score } from '../vo/score.vo';
+
 // 신규 생성용 Props
 interface CreateChildInterestProps {
   childId: number;
@@ -21,9 +24,9 @@ export class ChildInterest {
   private constructor(
     private readonly id: bigint | null,
     private readonly childId: number,
-    private keyword: string,
-    private rawScore: number,
-    private lastUpdated?: Date,
+    private keyword: Keyword,
+    private rawScore: Score,
+    private lastUpdated: Date,
     private readonly createdAt?: Date,
   ) {}
 
@@ -39,19 +42,15 @@ export class ChildInterest {
       throw new Error('아이 ID는 필수입니다.');
     }
 
-    if (!props.keyword || props.keyword.trim().length === 0) {
-      throw new Error('키워드는 필수입니다.');
-    }
-
-    if (props.rawScore < 0) {
-      throw new Error('점수는 0 이상이어야 합니다.');
-    }
+    // VO가 유효성 검증을 담당
+    const keyword = Keyword.create(props.keyword);
+    const score = Score.create(props.rawScore);
 
     return new ChildInterest(
       null,
       props.childId,
-      props.keyword.trim(),
-      props.rawScore,
+      keyword,
+      score,
       new Date(), // 현재 시간
       undefined,
     );
@@ -64,8 +63,8 @@ export class ChildInterest {
     return new ChildInterest(
       props.id,
       props.childId,
-      props.keyword,
-      props.rawScore,
+      Keyword.create(props.keyword),
+      Score.create(props.rawScore),
       props.lastUpdated,
       props.createdAt,
     );
@@ -84,14 +83,14 @@ export class ChildInterest {
   }
 
   getKeyword(): string {
-    return this.keyword;
+    return this.keyword.getValue();
   }
 
   getRawScore(): number {
-    return this.rawScore;
+    return this.rawScore.getValue();
   }
 
-  getLastUpdated(): Date | undefined {
+  getLastUpdated(): Date {
     return this.lastUpdated;
   }
 
@@ -110,7 +109,7 @@ export class ChildInterest {
     if (amount <= 0) {
       throw new Error('증가량은 0보다 커야 합니다.');
     }
-    this.rawScore += amount;
+    this.rawScore = this.rawScore.add(amount);
     this.lastUpdated = new Date();
   }
 
@@ -118,10 +117,7 @@ export class ChildInterest {
    * 점수 설정
    */
   updateScore(newScore: number): void {
-    if (newScore < 0) {
-      throw new Error('점수는 0 이상이어야 합니다.');
-    }
-    this.rawScore = newScore;
+    this.rawScore = Score.create(newScore); // VO가 유효성 검증
     this.lastUpdated = new Date();
   }
 
@@ -129,6 +125,6 @@ export class ChildInterest {
    * 특정 점수 이상인지 확인
    */
   hasScoreAbove(threshold: number): boolean {
-    return this.rawScore >= threshold;
+    return this.rawScore.isAbove(threshold - 0.01); // isAbove는 초과이므로 보정
   }
 }

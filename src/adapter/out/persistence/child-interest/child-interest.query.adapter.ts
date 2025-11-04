@@ -8,16 +8,16 @@ import { ChildInterestMapper } from './child-interest.mapper';
 export class ChildInterestQueryAdapter implements ChildInterestQueryPort {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findTopByChildId(
-    childId: number,
-    limit: number,
-  ): Promise<ChildInterest[]> {
-    const records = await this.prisma.childInterest.findMany({
+  async findTopByChildId(childId: number): Promise<ChildInterest | null> {
+    const record = await this.prisma.childInterest.findFirst({
       where: { child_id: childId },
       orderBy: { raw_score: 'desc' },
-      take: limit,
     });
 
-    return records.map((record) => ChildInterestMapper.toDomain(record));
+    if (!record) {
+      return null;
+    }
+
+    return ChildInterestMapper.toDomain(record);
   }
 }
