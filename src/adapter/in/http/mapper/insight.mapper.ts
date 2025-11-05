@@ -18,11 +18,11 @@ import { GetTopInterestsQuery } from 'src/application/command/get-top-interests.
 export class InsightMapper {
   toCreateCommand(
     dto: CreateAnalyticsRequestDto,
-    childProfileId: number,
+    userId: number,
   ): CreateAnalyticsCommand {
     return new CreateAnalyticsCommand(
-      childProfileId, // userId (Command에서 사용하지 않지만 필요)
-      childProfileId, // childId (토큰의 profileId = 자녀 프로필 ID)
+      userId, // userId (토큰의 profileId)
+      Number(dto.childId), // childId (DTO에서)
       BigInt(dto.conversationId), // string → bigint
       dto.extractedKeywords,
     );
