@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { BasicAuthGuard } from '../auth/guards/basic-auth.guard';
+import { AuthGuard, ChildGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
 import { CreateAnalyticsRequestDto } from '../dto/create-analytics-request.dto';
 import {
@@ -29,7 +29,6 @@ import { GetTopInterestsQuery } from 'src/application/command/get-top-interests.
 import { PruneOldInterestsCommand } from 'src/application/command/prune-old-interests.command';
 import { GetRecommendationsQuery } from 'src/application/command/get-recommendations.command';
 
-@UseGuards(BasicAuthGuard)
 @Controller('api/insights')
 export class InsightController {
   constructor(
@@ -49,11 +48,12 @@ export class InsightController {
   ) {}
 
   @Post('analytics')
+  @UseGuards(ChildGuard)
   async createAnalytics(
     @Body() dto: CreateAnalyticsRequestDto,
-    @Auth('userId') userId: number,
+    @Auth('profileId') profileId: number,
   ): Promise<BaseResponse<CreateAnalyticsResponseData>> {
-    const command = this.insightMapper.toCreateCommand(dto, userId);
+    const command = this.insightMapper.toCreateCommand(dto, profileId);
     const result = await this.createAnalyticsUseCase.execute(command);
     const response = this.insightMapper.toCreateResponse(result);
 
@@ -65,6 +65,7 @@ export class InsightController {
   }
 
   @Get('interests/:childId/top')
+  @UseGuards(AuthGuard)
   async getTopInterests(
     @Param('childId') childId: string,
     @Query('limit') limit?: string,
@@ -111,6 +112,7 @@ export class InsightController {
   }
 
   @Get('recommendations/:childId')
+  @UseGuards(AuthGuard)
   async getRecommendations(
     @Param('childId') childId: string,
     @Query('page') page?: string,
