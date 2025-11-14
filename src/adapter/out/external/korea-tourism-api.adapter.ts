@@ -10,7 +10,13 @@ import type {
  * 한국관광공사 Tour API Adapter
  * 축제, 행사, 관광지 정보를 조회하는 실제 외부 API 연동
  *
- * API 문서: https://apis.data.go.kr/B551011/KorService1
+ * API 문서: https://api.visitkorea.or.kr/#/useKoreaGuide
+ * API 엔드포인트: https://apis.data.go.kr/B551011/KorService2
+ *
+ * 주요 API:
+ * - searchKeyword2: 키워드 검색 조회
+ * - searchFestival2: 행사 정보 조회
+ * - areaBasedList2: 지역기반 관광정보 조회
  */
 @Injectable()
 export class KoreaTourismApiAdapter implements RecommendationProviderPort {
@@ -29,33 +35,17 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
     criteria: RecommendationSearchCriteria,
   ): Promise<RecommendationSearchResult> {
     try {
-      this.logger.log(`한국관광공사 API 호출 - keywords ${criteria.keyword}`);
+      this.logger.log(`한국관광공사 API 호출 - keyword: ${criteria.keyword}`);
 
-      // 1. 축제/행사 정보 조회
-      const festivalItems = await this.searchFestivals(criteria);
+      // 키워드로 검색 (searchKeyword2 API 사용)
+      const items = await this.searchByKeyword(criteria.keyword);
 
-      // 2. 관광지 정보 조회
-      const attractionItems = await this.searchAttractions(criteria);
+      this.logger.log(`키워드 검색 결과 - 총 ${items.length}개`);
 
-      // 3. 문화시설 정보 조회
-      const cultureItems = await this.searchCultureFacilities(criteria);
-
-      // 4. 모든 결과 병합
-      const allItems = [...festivalItems, ...attractionItems, ...cultureItems];
-      this.logger.log(
-        `API 호출 결과 - 축제: ${festivalItems.length}, 관광지: ${attractionItems.length}, 문화시설: ${cultureItems.length}, 합계: ${allItems.length}`,
-      );
-
-      // 5. 키워드 매칭 필터링
-      const filtered = this.filterByKeywords(allItems, criteria.keyword);
-      this.logger.log(
-        `키워드 필터링 후 - ${filtered.length}개 (필터 전: ${allItems.length}개)`,
-      );
-
-      // 6. 카테고리 필터 적용
+      // 카테고리 필터 적용
       const categoryFiltered = criteria.category
-        ? filtered.filter((item) => item.category === criteria.category)
-        : filtered;
+        ? items.filter((item) => item.category === criteria.category)
+        : items;
 
       this.logger.log(
         `한국관광공사 API 결과 - 전체: ${categoryFiltered.length}`,
@@ -71,6 +61,100 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
       // 에러 발생 시 빈 결과 반환
       return { items: [], totalCount: 0 };
     }
+  }
+
+  /**
+   * 키워드로 검색 (searchKeyword2 API 사용)
+   * API 문서: https://api.visitkorea.or.kr/#/useKoreaGuide
+   *
+   * @param keyword - 검색할 키워드 (한글은 자동으로 URL 인코딩됨)
+   * @param contentTypeId - 관광타입 ID (선택)
+   *   12: 관광지, 14: 문화시설, 15: 축제공연행사, 25: 여행코스
+   *   28: 레포츠, 32: 숙박, 38: 쇼핑, 39: 음식점
+   */
+  private async searchByKeyword(
+    keyword: string,
+    contentTypeId?: string,
+  ): Promise<any[]> {
+    try {
+      // URLSearchParams는 자동으로 인코딩하므로 원본 키워드 사용
+      const params: Record<string, string> = {
+        serviceKey: this.serviceKey,
+        numOfRows: '50',
+        pageNo: '1',
+        MobileOS: 'ETC',
+        MobileApp: 'PAI',
+        _type: 'json',
+        arrange: 'C', // C=수정일순(최신순)
+        keyword: keyword, // URLSearchParams가 자동으로 인코딩
+      };
+
+      // contentTypeId가 제공된 경우 추가
+      if (contentTypeId) {
+        params.contentTypeId = contentTypeId;
+      }
+
+      const urlParams = new URLSearchParams(params);
+      const url = `${this.baseUrl}/searchKeyword2?${urlParams.toString()}`;
+
+      this.logger.log(`키워드 검색 API 호출 - keyword: "${keyword}"`);
+      this.logger.log(`API 요청 URL: ${url}`);
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // API 응답 로깅
+      this.logger.log(
+        `API 응답 상태: ${data.response?.header?.resultCode} - ${data.response?.header?.resultMsg}`,
+      );
+
+      if (
+        !data.response?.body?.items?.item ||
+        data.response.header.resultCode !== '0000'
+      ) {
+        this.logger.warn(
+          `키워드 "${keyword}" 검색 결과 없음 - resultCode: ${data.response?.header?.resultCode}, resultMsg: ${data.response?.header?.resultMsg}`,
+        );
+        return [];
+      }
+
+      const items = Array.isArray(data.response.body.items.item)
+        ? data.response.body.items.item
+        : [data.response.body.items.item];
+
+      return items.map((item: any) => ({
+        id: `${item.contenttypeid}-${item.contentid}`,
+        title: item.title || '',
+        description: item.addr1 || '',
+        category: this.mapContentTypeToCategory(item.contenttypeid),
+        location: item.addr1 || '',
+        startDate: null,
+        endDate: null,
+        imageUrl: item.firstimage || item.firstimage2 || null,
+        link: this.makeDetailLink(item.contentid),
+        mapX: item.mapx ? Number(item.mapx) : undefined,
+        mapY: item.mapy ? Number(item.mapy) : undefined,
+      }));
+    } catch (error) {
+      this.logger.error(`키워드 "${keyword}" 검색 중 오류:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * contentTypeId를 카테고리로 매핑
+   */
+  private mapContentTypeToCategory(contentTypeId: string): string {
+    const typeMap: Record<string, string> = {
+      '12': '관광지', // 관광지
+      '14': '문화시설', // 문화시설
+      '15': '축제', // 축제공연행사
+      '25': '여행코스', // 여행코스
+      '28': '레포츠', // 레포츠
+      '32': '숙박', // 숙박
+      '38': '쇼핑', // 쇼핑
+      '39': '음식점', // 음식점
+    };
+    return typeMap[contentTypeId] || '관광지';
   }
 
   /**
@@ -233,23 +317,6 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
     }
   }
 
-  /**
-   * 키워드로 필터링
-   */
-  private filterByKeywords(items: any[], keyword: string): any[] {
-    const normalizedKeyword = keyword.toLowerCase().trim();
-
-    if (!normalizedKeyword) {
-      return items; // 키워드가 없으면 필터링하지 않음
-    }
-
-    return items.filter((item) => {
-      const searchText =
-        `${item.title} ${item.description} ${item.location}`.toLowerCase();
-      // searchText에 최상위 키워드가 포함되어 있는지 확인 후 포함된 것들로 새로운 배열 만들기
-      return searchText.includes(normalizedKeyword);
-    });
-  }
 
   /**
    * 오늘 날짜 (YYYYMMDD)

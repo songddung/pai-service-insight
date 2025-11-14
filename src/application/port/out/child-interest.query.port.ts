@@ -2,7 +2,7 @@ import { ChildInterest } from 'src/domain/model/child-interest/entity/child-inte
 
 export interface ChildInterestQueryPort {
   /**
-   * 자녀의 상위 관심사 조회 (가장 점수가 높은)
+   * 자녀의 상위 관심사 조회 (점수 높은 순으로 limit개)
    */
-  findTopByChildId(childId: number): Promise<ChildInterest | null>;
+  findTopByChildId(childId: number, limit: number): Promise<ChildInterest[]>;
 }

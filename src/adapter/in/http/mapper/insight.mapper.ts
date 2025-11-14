@@ -45,11 +45,11 @@ export class InsightMapper {
     result: GetTopInterestsResult,
   ): GetTopInterestsResponseData {
     return {
-      interests: {
-        keyword: result.interests.keyword,
-        rawScore: result.interests.rawScore,
-        lastUpdated: result.interests.lastUpdated?.toISOString(),
-      },
+      interests: result.interests.map((item) => ({
+        keyword: item.keyword,
+        rawScore: item.rawScore,
+        lastUpdated: item.lastUpdated?.toISOString(),
+      })),
     };
   }
 

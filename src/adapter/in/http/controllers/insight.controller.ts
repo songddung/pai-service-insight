@@ -25,9 +25,7 @@ import type { CreateAnalyticsUseCase } from 'src/application/port/in/create-anal
 import type { GetTopInterestsUseCase } from 'src/application/port/in/get-top-interests.use-case';
 import type { PruneOldInterestsUseCase } from 'src/application/port/in/prune-old-interests.use-case';
 import type { GetRecommendationsUseCase } from 'src/application/port/in/get-recommendations.use-case';
-import { GetTopInterestsQuery } from 'src/application/command/get-top-interests.command';
 import { PruneOldInterestsCommand } from 'src/application/command/prune-old-interests.command';
-import { GetRecommendationsQuery } from 'src/application/command/get-recommendations.command';
 
 @Controller('api/insights')
 export class InsightController {

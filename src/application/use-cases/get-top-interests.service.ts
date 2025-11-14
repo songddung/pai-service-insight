@@ -18,19 +18,21 @@ export class GetTopInterestsService implements GetTopInterestsUseCase {
   async execute(
     query: GetTopInterestsQuery,
   ): Promise<GetTopInterestsResult | null> {
-    const childInterest = await this.childInterestQuery.findTopByChildId(
+    const childInterests = await this.childInterestQuery.findTopByChildId(
       query.childId,
+      query.limit,
     );
 
-    if (!childInterest) {
+    if (childInterests.length === 0) {
       return null;
-    } else {
-      const interest: InterestItem = {
-        keyword: childInterest.getKeyword(),
-        rawScore: childInterest.getRawScore(),
-        lastUpdated: childInterest.getLastUpdated(),
-      };
-      return { interests: interest };
     }
+
+    const interests: InterestItem[] = childInterests.map((interest) => ({
+      keyword: interest.getKeyword(),
+      rawScore: interest.getRawScore(),
+      lastUpdated: interest.getLastUpdated(),
+    }));
+
+    return { interests };
   }
 }

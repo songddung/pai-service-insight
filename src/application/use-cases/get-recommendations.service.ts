@@ -39,11 +39,12 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
     );
 
     // 1. 아이의 상위 관심사 조회
-    const topInterest = await this.childInterestQuery.findTopByChildId(
+    const topInterests = await this.childInterestQuery.findTopByChildId(
       query.childId,
+      1, // 가장 높은 관심사 1개만
     );
 
-    if (!topInterest) {
+    if (topInterests.length === 0) {
       this.logger.warn(
         `childId ${query.childId}에 대한 관심사가 없습니다. 빈 추천 결과를 반환합니다.`,
       );
@@ -55,7 +56,7 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
         hasMore: false,
       };
     }
-    const keyword = topInterest.getKeyword();
+    const keyword = topInterests[0].getKeyword();
 
     // 2. Profile 정보 조회 -> User ID 획득
     const profile = await this.profileQuery.findById(query.childId);
