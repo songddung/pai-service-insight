@@ -32,6 +32,7 @@ import { RedisModule } from './adapter/out/cache/redis.module';
 
 // Query Adapter 구현체
 import { RedisTokenVersionQueryAdapter } from './adapter/out/cache/redis-token-version.query.adapter';
+import { RedisRecommendationCacheAdapter } from './adapter/out/cache/redis-recommendation-cache.adapter';
 import { ChildInterestQueryAdapter } from './adapter/out/persistence/child-interest/child-interest.query.adapter';
 
 // Scheduler
@@ -105,6 +106,12 @@ import { LocationDistanceService } from './domain/service/location-distance.serv
     {
       provide: INSIGHT_TOKENS.UserLocationQueryPort,
       useClass: UserLocationQueryAdapter,
+    },
+
+    // Cache 바인딩
+    {
+      provide: INSIGHT_TOKENS.RecommendationCachePort,
+      useClass: RedisRecommendationCacheAdapter,
     },
 
     // Repository 바인딩 (쓰기)

@@ -4,6 +4,7 @@ import { GetRecommendationsQuery } from '../command/get-recommendations.command'
 import { GetRecommendationsResult } from '../port/in/result/get-recommendations.result.dto';
 import type { ChildInterestQueryPort } from '../port/out/child-interest.query.port';
 import type { RecommendationProviderPort } from '../port/out/recommendation-provider.port';
+import type { RecommendationCachePort } from '../port/out/recommendation-cache.port';
 import type { ProfileQueryPort } from '../port/out/profile.query.port';
 import type { UserLocationQueryPort } from '../port/out/user-location.query.port';
 import { INSIGHT_TOKENS } from 'src/insight.token';
@@ -20,6 +21,9 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
 
     @Inject(INSIGHT_TOKENS.RecommendationProviderPort)
     private readonly recommendationProvider: RecommendationProviderPort,
+
+    @Inject(INSIGHT_TOKENS.RecommendationCachePort)
+    private readonly recommendationCache: RecommendationCachePort,
 
     @Inject(INSIGHT_TOKENS.ProfileQueryPort)
     private readonly profileQuery: ProfileQueryPort,
@@ -91,14 +95,38 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
       );
     }
 
-    // 4. 외부 API 호출하여 추천 콘텐츠 검색 (모든 결과 조회)
-    const searchResult =
-      await this.recommendationProvider.searchRecommendations({
+    // 4. 캐시에서 추천 콘텐츠 조회 시도
+    let searchResult =
+      await this.recommendationCache.findCachedRecommendations(
+        keyword,
+        query.category,
+      );
+
+    // 5. 캐시 미스 시 외부 API 호출
+    if (!searchResult) {
+      this.logger.log(
+        `캐시 미스 - 외부 API 호출 - keyword: ${keyword}, category: ${query.category || 'all'}`,
+      );
+      searchResult = await this.recommendationProvider.searchRecommendations({
         keyword,
         category: query.category,
       });
 
-    // 5. 위치 기반 거리 계산 및 정렬 (Domain Service 활용)
+      // 외부 API 결과를 캐시에 저장
+      if (searchResult.items.length > 0) {
+        await this.recommendationCache.cacheRecommendations(
+          keyword,
+          searchResult,
+          query.category,
+        );
+      }
+    } else {
+      this.logger.log(
+        `캐시 히트 - keyword: ${keyword}, category: ${query.category || 'all'}, items: ${searchResult.items.length}`,
+      );
+    }
+
+    // 6. 위치 기반 거리 계산 및 정렬 (Domain Service 활용)
     let sortedItems = searchResult.items;
     if (userLocation) {
       const itemsWithDistance = this.locationDistanceService.addDistanceAndSort(
@@ -112,7 +140,7 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
       );
     }
 
-    // 6. 키워드 매칭 추가
+    // 7. 키워드 매칭 추가
     const itemsWithKeywords = sortedItems.map((item) => ({
       ...item,
       relevantKeywords: this.keywordMatchingService.findRelevantKeyword(
@@ -121,7 +149,7 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
       ),
     }));
 
-    // 7. 페이지네이션 적용 (Application Layer에서 처리)
+    // 8. 페이지네이션 적용 (Application Layer에서 처리)
     const startIndex = (query.page - 1) * query.pageSize;
     const endIndex = startIndex + query.pageSize;
     const paginatedItems = itemsWithKeywords.slice(startIndex, endIndex);

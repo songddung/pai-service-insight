@@ -18,6 +18,9 @@ export const INSIGHT_TOKENS = {
   // External Services (Output Ports)
   RecommendationProviderPort: Symbol('RecommendationProviderPort'),
 
+  // Cache (Output Ports)
+  RecommendationCachePort: Symbol('RecommendationCachePort'),
+
   // Security (Output Ports)
   TokenProvider: Symbol('TokenProvider'),
 };
