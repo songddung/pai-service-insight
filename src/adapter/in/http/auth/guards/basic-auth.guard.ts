@@ -20,7 +20,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // HTTP 요청 객체 가져오기
-    const req = context.switchToHttp().getRequest() as any;
+    const req = context.switchToHttp().getRequest();
 
     // 1) Bearer 토큰 추출
     const authHeader = req.headers['authorization'] as string | undefined;
@@ -75,7 +75,7 @@ export class AuthGuard implements CanActivate {
 export class ParentGuard extends AuthGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ok = await super.canActivate(context);
-    const req = context.switchToHttp().getRequest() as any;
+    const req = context.switchToHttp().getRequest();
     if (req.auth.profileType !== 'parent') {
       throw new ForbiddenException('FORBIDDEN: parent profile required');
     }
@@ -88,7 +88,7 @@ export class ParentGuard extends AuthGuard {
 export class ChildGuard extends AuthGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ok = await super.canActivate(context);
-    const req = context.switchToHttp().getRequest() as any;
+    const req = context.switchToHttp().getRequest();
     if (req.auth.profileType !== 'child') {
       throw new ForbiddenException('FORBIDDEN: child profile required');
     }
@@ -111,7 +111,7 @@ export class BasicAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest() as any;
+    const req = context.switchToHttp().getRequest();
 
     // 1) Bearer 토큰 추출
     const authHeader = req.headers['authorization'] as string | undefined;

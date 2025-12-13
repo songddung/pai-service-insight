@@ -8,7 +8,10 @@ import { ChildInterestMapper } from './child-interest.mapper';
 export class ChildInterestQueryAdapter implements ChildInterestQueryPort {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findTopByChildId(childId: number, limit: number): Promise<ChildInterest[]> {
+  async findTopByChildId(
+    childId: number,
+    limit: number,
+  ): Promise<ChildInterest[]> {
     const records = await this.prisma.childInterest.findMany({
       where: { child_id: childId },
       orderBy: { raw_score: 'desc' },

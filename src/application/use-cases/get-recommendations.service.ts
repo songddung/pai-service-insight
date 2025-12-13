@@ -96,11 +96,10 @@ export class GetRecommendationsService implements GetRecommendationsUseCase {
     }
 
     // 4. 캐시에서 추천 콘텐츠 조회 시도
-    let searchResult =
-      await this.recommendationCache.findCachedRecommendations(
-        keyword,
-        query.category,
-      );
+    let searchResult = await this.recommendationCache.findCachedRecommendations(
+      keyword,
+      query.category,
+    );
 
     // 5. 캐시 미스 시 외부 API 호출
     if (!searchResult) {
