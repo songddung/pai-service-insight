@@ -41,6 +41,7 @@ export class AuthGuard implements CanActivate {
     const userId = claims.sub;
     const profileId = claims.profileId;
     const profileType = claims.profileType;
+    const deviceId = claims.deviceId;
 
     if (!userId)
       throw new UnauthorizedException('UNAUTHORIZED: sub(userId) missing');
@@ -55,6 +56,7 @@ export class AuthGuard implements CanActivate {
     if (tokenVersion !== undefined) {
       const currentVersion = await this.tokenVersionQuery.getVersion(
         Number(userId),
+        String(deviceId),
       );
       if (tokenVersion !== currentVersion) {
         throw new UnauthorizedException(
@@ -130,6 +132,7 @@ export class BasicAuthGuard implements CanActivate {
 
     // 3) userId만 확인 (profileId 없어도 OK)
     const userId = claims.sub;
+    const deviceId = claims.deviceId;
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED: sub(userId) missing');
     }
@@ -139,6 +142,7 @@ export class BasicAuthGuard implements CanActivate {
     if (tokenVersion !== undefined) {
       const currentVersion = await this.tokenVersionQuery.getVersion(
         Number(userId),
+        String(deviceId),
       );
       if (tokenVersion !== currentVersion) {
         throw new UnauthorizedException(
