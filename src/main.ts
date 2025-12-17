@@ -21,4 +21,4 @@ async function bootstrap() {
   const port = parseInt(process.env.PORT ?? '3003', 10);
   await app.listen(port, '0.0.0.0'); // 컨테이너 외부에서도 접근 가능
 }
-bootstrap();
+void bootstrap();

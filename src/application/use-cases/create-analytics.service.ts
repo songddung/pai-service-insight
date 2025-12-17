@@ -82,7 +82,8 @@ export class CreateAnalyticsService implements CreateAnalyticsUseCase {
         await this.childInterestRepository.save(existing);
       } else {
         // 새 키워드: 도메인 서비스를 통한 점수 계산
-        const calculatedScore = this.scoringService.calculateScore(mentionCount);
+        const calculatedScore =
+          this.scoringService.calculateScore(mentionCount);
         const newInterest = ChildInterest.create({
           childId: command.childId,
           keyword: keyword,

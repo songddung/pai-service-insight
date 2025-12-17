@@ -161,7 +161,7 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
    * 축제/행사 정보 조회
    */
   private async searchFestivals(
-    criteria: RecommendationSearchCriteria,
+    _criteria: RecommendationSearchCriteria,
   ): Promise<any[]> {
     try {
       const params = new URLSearchParams({
@@ -219,7 +219,7 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
    * 관광지 정보 조회
    */
   private async searchAttractions(
-    criteria: RecommendationSearchCriteria,
+    _criteria: RecommendationSearchCriteria,
   ): Promise<any[]> {
     try {
       const params = new URLSearchParams({
@@ -270,7 +270,7 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
    * 문화시설 정보 조회 (박물관, 미술관 등)
    */
   private async searchCultureFacilities(
-    criteria: RecommendationSearchCriteria,
+    _criteria: RecommendationSearchCriteria,
   ): Promise<any[]> {
     try {
       const params = new URLSearchParams({
@@ -316,7 +316,6 @@ export class KoreaTourismApiAdapter implements RecommendationProviderPort {
       return [];
     }
   }
-
 
   /**
    * 오늘 날짜 (YYYYMMDD)

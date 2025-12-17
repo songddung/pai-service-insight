@@ -5,13 +5,14 @@ import type { RecommendationCachePort } from 'src/application/port/out/recommend
 import type { RecommendationSearchResult } from 'src/application/port/out/recommendation-provider.port';
 
 @Injectable()
-export class RedisRecommendationCacheAdapter implements RecommendationCachePort {
+export class RedisRecommendationCacheAdapter
+  implements RecommendationCachePort
+{
   private readonly logger = new Logger(RedisRecommendationCacheAdapter.name);
   private readonly KEY_PREFIX = 'recommendation:';
   private readonly DEFAULT_TTL = 3600; // 1시간
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
-
 
   private getCacheKey(keyword: string, category?: string): string {
     const normalizedKeyword = keyword.toLowerCase().trim();
